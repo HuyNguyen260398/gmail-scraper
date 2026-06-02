@@ -5,7 +5,7 @@ Reads emails from Gmail by label / search query using the official Gmail API (OA
 ## Project layout
 
 ```
-gmail-automation/
+gmail-scraper/
 ├── src/
 │   ├── auth.py           # OAuth2 flow + token caching
 │   ├── gmail_client.py   # list / get / parse messages
