@@ -1,10 +1,10 @@
 """Entry point: read emails from a given Gmail label / query.
 
 Usage:
-    python src/main.py                          # default query from .env or "label:Petrolimex"
-    python src/main.py "label:Petrolimex is:unread"
-    python src/main.py "from:billing@example.com newer_than:30d" --max 10
-    python src/main.py "label:Petrolimex" --max 10 --output emails.json --format json
+    python3 src/main.py                          # default query from .env or "label:Petrolimex"
+    python3 src/main.py "label:Petrolimex is:unread"
+    python3 src/main.py "from:billing@example.com newer_than:30d" --max 10
+    python3 src/main.py "label:Petrolimex" --max 10 --output emails.json --format json
 """
 
 import argparse
@@ -56,6 +56,8 @@ def main():
         print(f"    From:    {email.sender}")
         print(f"    Subject: {email.subject}")
         print(f"    Snippet: {email.snippet[:120]}")
+        print("    Body:")
+        print(email.body or "    (no body)")
         print()
 
 

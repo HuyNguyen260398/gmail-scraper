@@ -9,7 +9,7 @@
 ## 2) System Flow
 
 ```text
-src/main.py -> GmailClient.fetch() -> list_message_ids() -> get_email() -> Gmail API -> printed summaries
+src/main.py -> GmailClient.fetch() -> list_message_ids() -> get_email() -> Gmail API -> printed messages
 ```
 
 1. `src/main.py` loads `.env`, parses an optional Gmail query and `--max` value, and instantiates `GmailClient`.
@@ -17,7 +17,7 @@ src/main.py -> GmailClient.fetch() -> list_message_ids() -> get_email() -> Gmail
 3. `get_credentials()` loads `config/token.json` if present, refreshes expired credentials when possible, or starts the installed-app OAuth flow with `config/credentials.json`.
 4. `GmailClient.fetch()` lists matching message IDs and fetches each message with `format="full"`.
 5. `get_email()` normalizes Gmail headers into an `Email` dataclass and extracts a body from the MIME payload.
-6. `src/main.py` prints date, sender, subject, and snippet for each fetched email.
+6. `src/main.py` prints date, sender, subject, snippet, and full extracted body for each fetched email.
 
 ## 3) Layer/Module Responsibilities
 
@@ -39,7 +39,7 @@ src/main.py -> GmailClient.fetch() -> list_message_ids() -> get_email() -> Gmail
 ## 5) Known Architectural Risks
 
 - `fetch()` performs one API call per message after listing IDs, so large result sets scale linearly in network calls.
-- The project is not packaged; imports rely on running `python src/main.py`, and a future test runner will need `src/` on `PYTHONPATH` or package setup.
+- The project is not packaged; imports rely on running `python3 src/main.py` or `uv run python3 src/main.py`. Tests add `src/` to `sys.path`.
 - OAuth token storage is local-file based; README notes this should change for AWS/headless deployment.
 
 ## 6) Evidence

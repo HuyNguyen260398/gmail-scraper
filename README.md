@@ -33,9 +33,17 @@ gmail-scraper/
    - Under OAuth consent screen, add your Google account as a **test user**.
 
 3. **Install dependencies**
+
+   Using `python3` and `pip`:
    ```bash
-   python -m venv .venv && source .venv/bin/activate
+   python3 -m venv .venv && source .venv/bin/activate
    pip install -r requirements.txt
+   ```
+
+   Or using `uv`:
+   ```bash
+   uv venv .venv && source .venv/bin/activate
+   uv pip install -r requirements.txt
    ```
 
 4. **Configure (optional)**
@@ -45,24 +53,44 @@ gmail-scraper/
    ```
 
 5. **Run**
+
+   Using `python3`:
    ```bash
-   python src/main.py "label:Petrolimex"
+   python3 src/main.py "label:Petrolimex"
    ```
+
+   Or using `uv`:
+   ```bash
+   uv run python3 src/main.py "label:Petrolimex"
+   ```
+
    First run opens a browser for consent and writes `config/token.json`.
-   Subsequent runs are headless.
+   Subsequent runs are headless. Terminal output includes message metadata, snippet, and the full extracted body.
 
 ## Exporting email content
 
 Save fetched messages to an output file with `--output`. JSON is the default format:
 
 ```bash
-python src/main.py "label:Petrolimex" --max 10 --output emails.json
+python3 src/main.py "label:Petrolimex" --max 10 --output emails.json
+```
+
+Or using `uv`:
+
+```bash
+uv run python3 src/main.py "label:Petrolimex" --max 10 --output emails.json
 ```
 
 Use `--format text` for a readable plain-text export:
 
 ```bash
-python src/main.py "label:Petrolimex is:unread" --max 5 --output emails.txt --format text
+python3 src/main.py "label:Petrolimex is:unread" --max 5 --output emails.txt --format text
+```
+
+Or using `uv`:
+
+```bash
+uv run python3 src/main.py "label:Petrolimex is:unread" --max 5 --output emails.txt --format text
 ```
 
 Each JSON item includes `id`, `thread_id`, `subject`, `sender`, `date`, `snippet`, `body`, and `labels`.

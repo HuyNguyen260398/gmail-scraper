@@ -17,7 +17,14 @@ This is a small Python CLI project for reading Gmail messages through the offici
 Create and activate a local virtual environment:
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Or using `uv`:
+
+```bash
+uv venv .venv
 source .venv/bin/activate
 ```
 
@@ -27,18 +34,38 @@ Install runtime dependencies:
 pip install -r requirements.txt
 ```
 
+Or using `uv`:
+
+```bash
+uv pip install -r requirements.txt
+```
+
 Run the CLI with the default `.env` query or an explicit Gmail search query:
 
 ```bash
-python src/main.py
-python src/main.py "label:Petrolimex is:unread" --max 10
-python src/main.py "label:Petrolimex" --output emails.json --format json
+python3 src/main.py
+python3 src/main.py "label:Petrolimex is:unread" --max 10
+python3 src/main.py "label:Petrolimex" --output emails.json --format json
+```
+
+Or using `uv`:
+
+```bash
+uv run python3 src/main.py
+uv run python3 src/main.py "label:Petrolimex is:unread" --max 10
+uv run python3 src/main.py "label:Petrolimex" --output emails.json --format json
 ```
 
 Run tests:
 
 ```bash
-python -m pytest
+python3 -m pytest
+```
+
+Or using `uv`:
+
+```bash
+uv run python3 -m pytest
 ```
 
 There is no build step, package script, or lint command configured yet.

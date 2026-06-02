@@ -45,7 +45,7 @@ This plan defines the implementation steps for adding file export support to the
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-005 | Update `src/main.py` usage docstring to include `python src/main.py "label:Petrolimex" --max 10 --output emails.json --format json`. | ✅ | 2026-06-02 |
+| TASK-005 | Update `src/main.py` usage docstring to include `python3 src/main.py "label:Petrolimex" --max 10 --output emails.json --format json`; repository docs also list `uv run python3 src/main.py ...` as a second option. | ✅ | 2026-06-02 |
 | TASK-006 | Import `write_emails` from `exporter` in `src/main.py`. | ✅ | 2026-06-02 |
 | TASK-007 | Add argparse option `--output` with `default=None` and help text `Write fetched emails to this file path.` | ✅ | 2026-06-02 |
 | TASK-008 | Add argparse option `--format` with `choices=["json", "text"]`, `default="json"`, and help text `Output file format when --output is provided.` | ✅ | 2026-06-02 |
@@ -62,7 +62,7 @@ This plan defines the implementation steps for adding file export support to the
 | TASK-012 | Create `tests/test_exporter.py` with unit tests for `email_to_dict`, `write_json`, `write_text`, and invalid `write_emails` format handling. | ✅ | 2026-06-02 |
 | TASK-013 | Ensure tests construct `Email` instances directly and do not import or instantiate `GmailClient`. | ✅ | 2026-06-02 |
 | TASK-014 | Update `README.md` setup or run section with JSON and text export examples. | ✅ | 2026-06-02 |
-| TASK-015 | Update `AGENTS.md` testing guidance to include `pytest` and command `python -m pytest`. | ✅ | 2026-06-02 |
+| TASK-015 | Update `AGENTS.md` testing guidance to include `pytest`, command `python3 -m pytest`, and `uv run python3 -m pytest` as a second option. | ✅ | 2026-06-02 |
 
 ## 3. Alternatives
 
@@ -88,10 +88,10 @@ This plan defines the implementation steps for adding file export support to the
 
 ## 6. Testing
 
-- **TEST-001**: Run `python -m pytest tests/test_exporter.py` and confirm all exporter unit tests pass.
-- **TEST-002**: Run `python -m pytest` and confirm the full test suite passes.
-- **TEST-003**: Manually run `python src/main.py "label:Petrolimex" --max 1 --output /tmp/gmail-export.json --format json` with valid credentials and confirm a JSON array is written.
-- **TEST-004**: Manually run `python src/main.py "label:Petrolimex" --max 1 --output /tmp/gmail-export.txt --format text` with valid credentials and confirm readable text sections are written.
+- **TEST-001**: Run `python3 -m pytest tests/test_exporter.py` or `uv run python3 -m pytest tests/test_exporter.py` and confirm all exporter unit tests pass.
+- **TEST-002**: Run `python3 -m pytest` or `uv run python3 -m pytest` and confirm the full test suite passes.
+- **TEST-003**: Manually run `python3 src/main.py "label:Petrolimex" --max 1 --output /tmp/gmail-export.json --format json` or `uv run python3 src/main.py "label:Petrolimex" --max 1 --output /tmp/gmail-export.json --format json` with valid credentials and confirm a JSON array is written.
+- **TEST-004**: Manually run `python3 src/main.py "label:Petrolimex" --max 1 --output /tmp/gmail-export.txt --format text` or `uv run python3 src/main.py "label:Petrolimex" --max 1 --output /tmp/gmail-export.txt --format text` with valid credentials and confirm readable text sections are written.
 
 ## 7. Risks & Assumptions
 

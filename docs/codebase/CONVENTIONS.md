@@ -30,8 +30,8 @@
 
 ## 5) Testing Conventions
 
-- Test file naming/location rule: `tests/` exists, but no test files or naming convention are present.
-- Mocking strategy norm: `[TODO]` no mocks or test framework are configured.
+- Test file naming/location rule: tests live under `tests/` and use `test_*.py` names.
+- Mocking strategy norm: pytest monkeypatch is used for CLI dependency isolation.
 - Coverage expectation: `[TODO]` no coverage tool or threshold is configured.
 
 ## 6) Evidence

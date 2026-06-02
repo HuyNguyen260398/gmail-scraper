@@ -4,7 +4,7 @@
 
 | Severity | Concern | Evidence | Impact | Suggested action |
 |----------|---------|----------|--------|------------------|
-| High | No configured tests for OAuth, Gmail API pagination, MIME parsing, or CLI behavior | `CLAUDE.md`, `tests/`, `src/gmail_client.py` | Regressions can break authentication or message parsing without detection | Add focused unit tests for MIME extraction and pagination using mocked Gmail service objects |
+| High | No configured tests for OAuth or Gmail API pagination | `CLAUDE.md`, `tests/`, `src/gmail_client.py` | Regressions can break authentication or message listing without detection | Add focused unit tests for pagination using mocked Gmail service objects |
 | Medium | Local token-file credential storage is unsuitable for the AWS/headless deployment noted in README | `README.md`, `src/auth.py`, `.gitignore` | Shipping or mishandling refresh tokens would create credential exposure risk | Abstract token loading/storage before AWS deployment and use Secrets Manager or SSM as README suggests |
 | Medium | Message fetching is sequential: list IDs, then fetch each message one at a time | `src/gmail_client.py` | Large result sets can be slow and quota-sensitive | Consider batch requests, concurrency with limits, or incremental sync using `historyId` |
 | Medium | No explicit retry, timeout, logging, or metrics around Gmail API calls | `src/gmail_client.py`, `docs/codebase/.codebase-scan.txt` | Failures are harder to diagnose and may abort the whole run | Add bounded retry/timeout policy and structured logging around list/get calls |
@@ -14,9 +14,9 @@
 
 | Debt item | Why it exists | Where | Risk if ignored | Suggested fix |
 |-----------|---------------|-------|-----------------|---------------|
-| Missing test harness | The repo has a placeholder `tests/` directory but no test framework or files | `tests/`, `CLAUDE.md` | Fragile changes to auth and parsing | Add `pytest` and unit tests for pure parsing logic first |
+| Partial test harness | The repo uses pytest for exporter, Gmail body parsing, and CLI export wiring, but not OAuth or pagination | `tests/`, `CLAUDE.md` | Fragile changes to auth and message listing | Add pytest coverage for auth and pagination |
 | No lint/format configuration | Scan found no formatter/linter config | `docs/codebase/.codebase-scan.txt` | Style can drift as files are added | Add `ruff` or another Python formatter/linter if desired |
-| Flat import layout | Running `python src/main.py` works, but package boundaries are not formalized | `CLAUDE.md`, `src/main.py`, `src/gmail_client.py` | Test/import friction as project grows | Convert `src/` into an installable package or set a documented test path |
+| Flat import layout | Running `python3 src/main.py` or `uv run python3 src/main.py` works, but package boundaries are not formalized | `CLAUDE.md`, `src/main.py`, `src/gmail_client.py` | Test/import friction as project grows | Convert `src/` into an installable package or keep documenting the test path setup |
 
 ## 3) Security Concerns
 
@@ -24,7 +24,7 @@
 |------|--------------------------------|----------|--------------------|-----|
 | OAuth refresh token stored locally | N/A | `src/auth.py`, `.gitignore` | `config/token.json` is gitignored and chmodded to `0600` after write | No secret manager abstraction for deployment |
 | OAuth client secret expected in local config file | N/A | `README.md`, `src/auth.py`, `.gitignore` | `config/credentials.json` is gitignored | No validation of file permissions for `credentials.json` |
-| Email content may be printed or processed locally | N/A | `src/main.py`, `src/gmail_client.py` | CLI prints only date/from/subject/snippet, not full body | No logging/redaction policy if output expands later |
+| Email content may be printed or processed locally | N/A | `src/main.py`, `src/gmail_client.py` | CLI prints date/from/subject/snippet and full extracted body | No logging/redaction policy for sensitive body content |
 
 ## 4) Performance and Scaling Concerns
 

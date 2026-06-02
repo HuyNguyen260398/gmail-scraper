@@ -55,7 +55,10 @@ def test_main_writes_requested_output_file(monkeypatch, capsys):
     assert len(emails) == 1
     assert output_path == "emails.txt"
     assert output_format == "text"
-    assert "Saved 1 message(s) to emails.txt as text." in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert "Saved 1 message(s) to emails.txt as text." in output
+    assert "Snippet: Your receipt is ready" in output
+    assert "Body:\nFull receipt body" in output
 
 
 def test_main_uses_json_output_format_by_default(monkeypatch, capsys):
@@ -86,4 +89,7 @@ def test_main_uses_json_output_format_by_default(monkeypatch, capsys):
     assert len(emails) == 1
     assert output_path == "emails.json"
     assert output_format == "json"
-    assert "Saved 1 message(s) to emails.json as json." in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert "Saved 1 message(s) to emails.json as json." in output
+    assert "Snippet: Your receipt is ready" in output
+    assert "Body:\nFull receipt body" in output

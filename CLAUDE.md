@@ -5,18 +5,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Setup
-python -m venv .venv && source .venv/bin/activate
+# Setup with python3 and pip
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# Run (query is optional; defaults to GMAIL_QUERY env or "label:Petrolimex")
-python src/main.py
-python src/main.py "label:Petrolimex is:unread" --max 10
+# Or setup with uv
+uv venv .venv && source .venv/bin/activate
+uv pip install -r requirements.txt
+
+# Run with python3 (query is optional; defaults to GMAIL_QUERY env or "label:Petrolimex")
+python3 src/main.py
+python3 src/main.py "label:Petrolimex is:unread" --max 10
+
+# Or run with uv
+uv run python3 src/main.py
+uv run python3 src/main.py "label:Petrolimex is:unread" --max 10
 ```
 
 First run opens a browser for OAuth consent and writes `config/token.json`; later runs are headless.
 
-There is no build step, linter, or test suite configured. `tests/` exists but is empty.
+Run tests with `python3 -m pytest` or `uv run python3 -m pytest`. There is no build step or linter configured.
 
 ## Architecture
 
@@ -30,7 +38,7 @@ A small CLI that reads Gmail messages via the official Gmail API. Flow:
 
 ### Things to know before editing
 
-- **Flat imports.** Modules in `src/` import each other without a package prefix (`from gmail_client import GmailClient`, `from auth import get_credentials`). This works only because scripts are run directly as `python src/main.py`, which puts `src/` on `sys.path`. There is no `__init__.py` / installable package. New modules should follow the same flat style, and any test runner will need `src/` on the path.
+- **Flat imports.** Modules in `src/` import each other without a package prefix (`from gmail_client import GmailClient`, `from auth import get_credentials`). This works because scripts are run directly as `python3 src/main.py` or `uv run python3 src/main.py`, which puts `src/` on `sys.path`. There is no `__init__.py` / installable package. New modules should follow the same flat style, and tests add `src/` to `sys.path`.
 - **Changing the OAuth scope** (in `auth.py SCOPES`) requires deleting `config/token.json` so the consent flow re-runs — an existing token will not gain new permissions.
 
 ### Deployment notes (from README)
