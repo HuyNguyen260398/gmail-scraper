@@ -4,6 +4,7 @@ Usage:
     python src/main.py                          # default query from .env or "label:Petrolimex"
     python src/main.py "label:Petrolimex is:unread"
     python src/main.py "from:billing@example.com newer_than:30d" --max 10
+    python src/main.py "label:Petrolimex" --max 10 --output emails.json --format json
 """
 
 import argparse
@@ -11,6 +12,7 @@ import os
 
 from dotenv import load_dotenv
 
+from exporter import write_emails
 from gmail_client import GmailClient
 
 load_dotenv()
@@ -28,10 +30,25 @@ def main():
         "--max", type=int, default=int(os.getenv("GMAIL_MAX_RESULTS", "20")),
         help="Maximum number of messages to fetch.",
     )
+    parser.add_argument(
+        "--output",
+        default=None,
+        help="Write fetched emails to this file path.",
+    )
+    parser.add_argument(
+        "--format",
+        choices=["json", "text"],
+        default="json",
+        help="Output file format when --output is provided.",
+    )
     args = parser.parse_args()
 
     client = GmailClient()
     emails = client.fetch(query=args.query, max_results=args.max)
+
+    if args.output:
+        write_emails(emails, args.output, args.format)
+        print(f"Saved {len(emails)} message(s) to {args.output} as {args.format}.")
 
     print(f"Found {len(emails)} message(s) for query: {args.query!r}\n")
     for i, email in enumerate(emails, 1):

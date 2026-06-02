@@ -8,6 +8,7 @@ Reads emails from Gmail by label / search query using the official Gmail API (OA
 gmail-scraper/
 ├── src/
 │   ├── auth.py           # OAuth2 flow + token caching
+│   ├── exporter.py       # JSON / text export helpers
 │   ├── gmail_client.py   # list / get / parse messages
 │   └── main.py           # CLI entry point
 ├── config/
@@ -49,6 +50,22 @@ gmail-scraper/
    ```
    First run opens a browser for consent and writes `config/token.json`.
    Subsequent runs are headless.
+
+## Exporting email content
+
+Save fetched messages to an output file with `--output`. JSON is the default format:
+
+```bash
+python src/main.py "label:Petrolimex" --max 10 --output emails.json
+```
+
+Use `--format text` for a readable plain-text export:
+
+```bash
+python src/main.py "label:Petrolimex is:unread" --max 5 --output emails.txt --format text
+```
+
+Each JSON item includes `id`, `thread_id`, `subject`, `sender`, `date`, `snippet`, `body`, and `labels`.
 
 ## Gmail search syntax (the `query` arg)
 
