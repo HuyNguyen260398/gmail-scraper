@@ -1,0 +1,86 @@
+
+=== DIRECTORY TREE (max depth 3, source files only) ===
+.env.example
+.gitignore
+CLAUDE.md
+README.md
+config
+docs
+docs/codebase
+docs/codebase/.codebase-scan.txt
+requirements.txt
+src
+src/auth.py
+src/gmail_client.py
+src/main.py
+tests
+
+=== STACK DETECTION (manifest files) ===
+
+--- requirements.txt ---
+google-api-python-client>=2.120.0
+google-auth>=2.29.0
+google-auth-oauthlib>=1.2.0
+google-auth-httplib2>=0.2.0
+python-dotenv>=1.0.0
+
+
+=== ENTRY POINTS ===
+Found: src/main.py
+Found: src/main.py
+
+=== LINTING AND FORMATTING CONFIG ===
+No linting or formatting config files found in project root.
+
+=== ENVIRONMENT VARIABLE TEMPLATES ===
+--- .env.example ---
+# Gmail search query (Gmail search syntax)
+GMAIL_QUERY=label:Petrolimex
+
+# Max messages to fetch per run
+GMAIL_MAX_RESULTS=20
+
+
+=== TODO / FIXME / HACK (production code only, test dirs excluded) ===
+None found.
+
+=== GIT RECENT COMMITS (last 20) ===
+No commits found.
+
+=== HIGH-CHURN FILES (last 90 days, top 20) ===
+None found.
+
+=== MONOREPO SIGNALS ===
+No monorepo signals detected.
+
+=== CODE METRICS ===
+Total files scanned: 8
+Total lines of code: 210
+
+Files by language:
+  Other: 5
+  Python: 3
+
+Top 10 largest files:
+src/gmail_client.py: 3.6KB
+CLAUDE.md: 2.3KB
+README.md: 2.2KB
+src/auth.py: 1.8KB
+src/main.py: 1.3KB
+requirements.txt: 0.1KB
+.env.example: 0.1KB
+docs/codebase/.codebase-scan.txt: 0.0KB
+
+=== CI/CD PIPELINES ===
+No CI/CD pipelines detected.
+
+=== CONTAINERS & ORCHESTRATION ===
+No containerization configs detected.
+
+=== SECURITY & COMPLIANCE ===
+No security configs detected.
+
+=== PERFORMANCE & TESTING ===
+No performance testing configs detected.
+
+=== SCAN COMPLETE ===
