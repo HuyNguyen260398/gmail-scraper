@@ -21,6 +21,7 @@ class FakeGmailClient:
                 snippet="Your receipt is ready",
                 body="Full receipt body",
                 labels=["INBOX"],
+                links=["https://portal.petrolimex.com.vn/invoice?id=123"],
             )
         ]
 
@@ -58,6 +59,7 @@ def test_main_writes_requested_output_file(monkeypatch, capsys):
     output = capsys.readouterr().out
     assert "Saved 1 message(s) to emails.txt as text." in output
     assert "Snippet: Your receipt is ready" in output
+    assert "https://portal.petrolimex.com.vn/invoice?id=123" in output
     assert "Body:\nFull receipt body" in output
 
 
@@ -92,4 +94,5 @@ def test_main_uses_json_output_format_by_default(monkeypatch, capsys):
     output = capsys.readouterr().out
     assert "Saved 1 message(s) to emails.json as json." in output
     assert "Snippet: Your receipt is ready" in output
+    assert "https://portal.petrolimex.com.vn/invoice?id=123" in output
     assert "Body:\nFull receipt body" in output

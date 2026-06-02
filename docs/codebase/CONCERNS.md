@@ -24,7 +24,7 @@
 |------|--------------------------------|----------|--------------------|-----|
 | OAuth refresh token stored locally | N/A | `src/auth.py`, `.gitignore` | `config/token.json` is gitignored and chmodded to `0600` after write | No secret manager abstraction for deployment |
 | OAuth client secret expected in local config file | N/A | `README.md`, `src/auth.py`, `.gitignore` | `config/credentials.json` is gitignored | No validation of file permissions for `credentials.json` |
-| Email content may be printed or processed locally | N/A | `src/main.py`, `src/gmail_client.py` | CLI prints date/from/subject/snippet and full extracted body | No logging/redaction policy for sensitive body content |
+| Email content may be printed or processed locally | N/A | `src/main.py`, `src/gmail_client.py` | CLI prints date/from/subject/snippet, extracted links, and full extracted body | No logging/redaction policy for sensitive body content or URLs |
 
 ## 4) Performance and Scaling Concerns
 

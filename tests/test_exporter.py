@@ -20,6 +20,7 @@ def sample_email() -> Email:
         snippet="Your receipt is ready",
         body="Full receipt body",
         labels=["INBOX", "Petrolimex"],
+        links=["https://portal.petrolimex.com.vn/invoice?id=123"],
     )
 
 
@@ -33,6 +34,7 @@ def test_email_to_dict_includes_all_email_fields():
         "snippet": "Your receipt is ready",
         "body": "Full receipt body",
         "labels": ["INBOX", "Petrolimex"],
+        "links": ["https://portal.petrolimex.com.vn/invoice?id=123"],
     }
 
 
@@ -59,6 +61,7 @@ def test_write_text_writes_readable_email_sections(tmp_path):
     assert "Subject: Fuel receipt" in content
     assert "Labels: INBOX, Petrolimex" in content
     assert "Snippet: Your receipt is ready" in content
+    assert "Links:\nhttps://portal.petrolimex.com.vn/invoice?id=123" in content
     assert "Body:\nFull receipt body" in content
     assert "=" * 80 in content
 
@@ -80,6 +83,7 @@ def test_write_emails_writes_text_format(tmp_path):
 
     content = output_path.read_text(encoding="utf-8")
     assert "Email 1" in content
+    assert "Links:\nhttps://portal.petrolimex.com.vn/invoice?id=123" in content
     assert "Body:\nFull receipt body" in content
 
 

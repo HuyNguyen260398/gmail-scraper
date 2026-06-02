@@ -26,7 +26,7 @@ uv run python3 -m pytest tests/test_exporter.py
 
 | Scope | Covered? | Typical target | Notes |
 |-------|----------|----------------|-------|
-| Unit | Partial | `exporter` helpers, `GmailClient._extract_body`, CLI export wiring | Auth and pagination are not covered |
+| Unit | Partial | `exporter` helpers, `GmailClient._extract_body`, `GmailClient._extract_links`, CLI export wiring | Auth and pagination are not covered |
 | Integration | No | Gmail API OAuth and fetch flow | No test files or integration config exist |
 | E2E | No | CLI command `python3 src/main.py ...` or `uv run python3 src/main.py ...` | No E2E runner or command exists |
 

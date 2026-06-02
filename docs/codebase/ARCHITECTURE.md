@@ -16,8 +16,8 @@ src/main.py -> GmailClient.fetch() -> list_message_ids() -> get_email() -> Gmail
 2. `GmailClient.__init__` builds a Gmail API v1 service using credentials from `get_credentials()`.
 3. `get_credentials()` loads `config/token.json` if present, refreshes expired credentials when possible, or starts the installed-app OAuth flow with `config/credentials.json`.
 4. `GmailClient.fetch()` lists matching message IDs and fetches each message with `format="full"`.
-5. `get_email()` normalizes Gmail headers into an `Email` dataclass and extracts a body from the MIME payload.
-6. `src/main.py` prints date, sender, subject, snippet, and full extracted body for each fetched email.
+5. `get_email()` normalizes Gmail headers into an `Email` dataclass and extracts body text plus links from the MIME payload.
+6. `src/main.py` prints date, sender, subject, snippet, extracted links, and full extracted body for each fetched email.
 
 ## 3) Layer/Module Responsibilities
 
@@ -25,7 +25,7 @@ src/main.py -> GmailClient.fetch() -> list_message_ids() -> get_email() -> Gmail
 |-----------------|------|--------------|----------|
 | CLI layer | Argument parsing, `.env` loading, terminal output | OAuth internals, Gmail API pagination | `src/main.py` |
 | Auth layer | OAuth scope, credential file paths, token refresh and consent flow | Message parsing, query construction | `src/auth.py` |
-| Gmail API wrapper | Gmail service setup, message listing, message fetching, MIME body extraction | CLI defaults, local credential file permissions | `src/gmail_client.py` |
+| Gmail API wrapper | Gmail service setup, message listing, message fetching, MIME body and link extraction | CLI defaults, local credential file permissions | `src/gmail_client.py` |
 | Local config files | User-provided OAuth client secret and generated token | Committed application logic | `README.md`, `.gitignore`, `src/auth.py` |
 
 ## 4) Reused Patterns

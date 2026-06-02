@@ -17,6 +17,7 @@ def email_to_dict(email: Email) -> dict:
         "snippet": email.snippet,
         "body": email.body,
         "labels": list(email.labels),
+        "links": list(email.links),
     }
 
 
@@ -34,6 +35,7 @@ def write_text(emails: list[Email], output_path: str) -> None:
 
     for index, email in enumerate(emails, 1):
         labels = ", ".join(email.labels) if email.labels else "(none)"
+        links = "\n".join(email.links) if email.links else "(none)"
         sections.append(
             "\n".join(
                 [
@@ -44,6 +46,8 @@ def write_text(emails: list[Email], output_path: str) -> None:
                     f"Subject: {email.subject}",
                     f"Labels: {labels}",
                     f"Snippet: {email.snippet}",
+                    "Links:",
+                    links,
                     "",
                     "Body:",
                     email.body,

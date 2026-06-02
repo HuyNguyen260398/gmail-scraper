@@ -18,8 +18,8 @@ This plan defines the implementation steps for adding file export support to the
 
 - **REQ-001**: Add a CLI option `--output PATH` in `src/main.py` that writes fetched email content to the specified file.
 - **REQ-002**: Add a CLI option `--format json|text` in `src/main.py`; default value must be `json`.
-- **REQ-003**: JSON output must include `id`, `thread_id`, `subject`, `sender`, `date`, `snippet`, `body`, and `labels` for each email.
-- **REQ-004**: Text output must include readable per-email sections containing date, sender, subject, labels, snippet, and body.
+- **REQ-003**: JSON output must include `id`, `thread_id`, `subject`, `sender`, `date`, `snippet`, `body`, `labels`, and `links` for each email.
+- **REQ-004**: Text output must include readable per-email sections containing date, sender, subject, labels, snippet, links, and body.
 - **REQ-005**: The existing console summary behavior must remain available after fetching emails.
 - **SEC-001**: Do not write or expose `config/credentials.json`, `config/token.json`, or OAuth secrets in exported files.
 - **CON-001**: Use only Python standard library modules for export serialization.

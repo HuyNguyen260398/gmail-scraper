@@ -56,6 +56,12 @@ def main():
         print(f"    From:    {email.sender}")
         print(f"    Subject: {email.subject}")
         print(f"    Snippet: {email.snippet[:120]}")
+        print("    Links:")
+        if email.links:
+            for link in email.links:
+                print(f"        {link}")
+        else:
+            print("        (none)")
         print("    Body:")
         print(email.body or "    (no body)")
         print()

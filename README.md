@@ -65,7 +65,7 @@ gmail-scraper/
    ```
 
    First run opens a browser for consent and writes `config/token.json`.
-   Subsequent runs are headless. Terminal output includes message metadata, snippet, and the full extracted body.
+   Subsequent runs are headless. Terminal output includes message metadata, snippet, extracted links, and the full extracted body.
 
 ## Exporting email content
 
@@ -93,7 +93,7 @@ Or using `uv`:
 uv run python3 src/main.py "label:Petrolimex is:unread" --max 5 --output emails.txt --format text
 ```
 
-Each JSON item includes `id`, `thread_id`, `subject`, `sender`, `date`, `snippet`, `body`, and `labels`.
+Each JSON item includes `id`, `thread_id`, `subject`, `sender`, `date`, `snippet`, `body`, `labels`, and `links`.
 
 ## Gmail search syntax (the `query` arg)
 

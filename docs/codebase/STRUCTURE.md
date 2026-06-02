@@ -23,9 +23,9 @@
 
 | Boundary | What belongs here | What must not be here |
 |----------|-------------------|------------------------|
-| `src/main.py` | CLI parsing, loading `.env`, calling the Gmail client, printing message metadata and body content | OAuth flow details or MIME parsing logic |
+| `src/main.py` | CLI parsing, loading `.env`, calling the Gmail client, printing message metadata, links, and body content | OAuth flow details or MIME parsing logic |
 | `src/auth.py` | Gmail OAuth scopes, credential loading, token refresh, first-run consent flow, token file write | Gmail message listing or CLI output |
-| `src/gmail_client.py` | Gmail API service construction, message listing/fetching, email dataclass, MIME body extraction | Argument parsing, environment loading, token file path policy |
+| `src/gmail_client.py` | Gmail API service construction, message listing/fetching, email dataclass, MIME body and link extraction | Argument parsing, environment loading, token file path policy |
 | `config/` | Local OAuth credential and token files at runtime | Source code or committed secrets |
 
 ## 4) Naming and Organization Rules
