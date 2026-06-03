@@ -38,12 +38,14 @@ gmail-scraper/
    ```bash
    python3 -m venv .venv && source .venv/bin/activate
    pip install -r requirements.txt
+   python3 -m playwright install chromium
    ```
 
    Or using `uv`:
    ```bash
    uv venv .venv && source .venv/bin/activate
    uv pip install -r requirements.txt
+   uv run python3 -m playwright install chromium
    ```
 
 4. **Configure (optional)**
@@ -94,6 +96,37 @@ uv run python3 src/main.py "label:Petrolimex is:unread" --max 5 --output emails.
 ```
 
 Each JSON item includes `id`, `thread_id`, `subject`, `sender`, `date`, `snippet`, `body`, `labels`, and `links`.
+
+## Automating extracted URL forms
+
+Form automation is opt-in. It uses the links extracted from each email, opens the selected HTTPS URL in Chromium, discovers form inputs, fills configured fields from email content, and submits only when `--submit-form` is provided.
+
+Create a local config from the example:
+
+```bash
+cp config/form_automation.example.json config/form_automation.json
+```
+
+Dry-run fill without submitting:
+
+```bash
+python3 src/main.py "label:Petrolimex" --max 1 --automate-form --automation-output /tmp/form-results.json
+```
+
+Submit the form after filling:
+
+```bash
+python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config config/form_automation.json --submit-form
+```
+
+Or using `uv`:
+
+```bash
+uv run python3 src/main.py "label:Petrolimex" --max 1 --automate-form --automation-output /tmp/form-results.json
+uv run python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config config/form_automation.json --submit-form
+```
+
+`config/form_automation.json` is gitignored because selectors and field mapping rules may contain sensitive site-specific data. The config must include a non-empty `url_allowlist`; URLs outside those hostnames are skipped.
 
 ## Gmail search syntax (the `query` arg)
 

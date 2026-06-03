@@ -1,0 +1,40 @@
+{
+  "url_allowlist": [
+    "portal.petrolimex.com.vn"
+  ],
+  "headless": true,
+  "timeout_ms": 30000,
+  "field_values": [
+    {
+      "key": "invoice_code",
+      "source": "body",
+      "regex": "Invoice(?: code)?:\\s*([A-Za-z0-9-]+)",
+      "group": 1
+    },
+    {
+      "key": "customer_email",
+      "source": "sender_email"
+    }
+  ],
+  "form_fields": [
+    {
+      "field_key": "invoice_code",
+      "selector_strategy": "label",
+      "selector_value": "Invoice code",
+      "input_type": "text",
+      "required": true
+    },
+    {
+      "field_key": "customer_email",
+      "selector_strategy": "name",
+      "selector_value": "email",
+      "input_type": "email",
+      "required": false
+    }
+  ],
+  "submit_selector": {
+    "selector_strategy": "role",
+    "selector_name": "button",
+    "selector_value": "Submit"
+  }
+}
