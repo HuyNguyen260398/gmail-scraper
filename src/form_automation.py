@@ -8,6 +8,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from gmail_client import Email
+from petrolimex import extract_invoice_lookup_code
 
 
 @dataclass
@@ -68,6 +69,13 @@ class FormAutomationResult:
     final_url: str
     status: str
     error: str | None = None
+
+
+@dataclass
+class FormAutomationInputRecord:
+    email_id: str
+    url: str
+    field_values: dict[str, str]
 
 
 TEXT_INPUT_TYPES = {
@@ -139,14 +147,6 @@ def build_email_context(email: Email) -> dict[str, str]:
         "links_joined": "\n".join(email.links),
         "first_link": email.links[0] if email.links else "",
     }
-
-
-def extract_invoice_lookup_code(text: str) -> str | None:
-    """Extract a Petrolimex invoice lookup code from email body text."""
-    match = re.search(r"Mã\s+tra\s+cứu\s*:\s*([^\s\r\n]+)", text, flags=re.IGNORECASE)
-    if not match:
-        return None
-    return match.group(1).strip()
 
 
 def resolve_field_values(
@@ -339,13 +339,25 @@ def automate_email_form(
     url = select_email_url(email, link_index)
     if not url:
         return _result(email.id, "", "skipped", "No HTTPS URL found at link index.")
-    if not is_allowed_url(url, config.url_allowlist):
-        return _result(email.id, url, "skipped", "URL hostname is not allowlisted.")
 
     try:
         field_values = resolve_field_values(email, config)
     except ValueError as exc:
         return _result(email.id, url, "failed", str(exc))
+
+    return automate_url_form(email.id, url, field_values, config, submit)
+
+
+def automate_url_form(
+    email_id: str,
+    url: str,
+    field_values: dict[str, str],
+    config: FormAutomationConfig,
+    submit: bool,
+) -> FormAutomationResult:
+    """Automate one selected URL using already resolved field values."""
+    if not is_allowed_url(url, config.url_allowlist):
+        return _result(email_id, url, "skipped", "URL hostname is not allowlisted.")
 
     try:
         from playwright.sync_api import sync_playwright
@@ -388,7 +400,7 @@ def automate_email_form(
                         status = "failed"
 
                     return FormAutomationResult(
-                        email_id=email.id,
+                        email_id=email_id,
                         url=url,
                         discovered_inputs=discovered,
                         filled_fields=filled_fields,
@@ -407,7 +419,7 @@ def automate_email_form(
             finally:
                 browser.close()
     except Exception as exc:
-        return _result(email.id, url, "failed", str(exc))
+        return _result(email_id, url, "failed", str(exc))
 
 
 def automate_email_forms(
@@ -418,6 +430,51 @@ def automate_email_forms(
     return [
         automate_email_form(email, config, link_index, submit)
         for email in emails
+    ]
+
+
+def load_form_automation_input(path: str) -> list[FormAutomationInputRecord]:
+    """Load automation URL and field values from an exported JSON handoff file."""
+    input_path = Path(path)
+    try:
+        raw = json.loads(input_path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise ValueError(f"Form automation input not found: {path}") from exc
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid JSON in form automation input: {path}") from exc
+
+    if not isinstance(raw, list):
+        raise ValueError("Form automation input must be a JSON array.")
+
+    records = []
+    for index, item in enumerate(raw, 1):
+        if not isinstance(item, dict):
+            raise ValueError(f"Automation input item {index} must be an object.")
+        email_id = str(item.get("email_id") or item.get("id") or "")
+        url = str(item.get("url") or "")
+        field_values = item.get("field_values")
+        if field_values is None and item.get("invoice_code"):
+            field_values = {"invoice_code": item["invoice_code"]}
+        if not isinstance(field_values, dict):
+            field_values = {}
+        records.append(
+            FormAutomationInputRecord(
+                email_id=email_id,
+                url=url,
+                field_values={str(key): str(value) for key, value in field_values.items()},
+            )
+        )
+    return records
+
+
+def automate_form_input_records(
+    input_path: str, config_path: str, submit: bool
+) -> list[FormAutomationResult]:
+    """Run form automation from an exported JSON handoff file."""
+    config = load_form_automation_config(config_path)
+    return [
+        automate_url_form(record.email_id, record.url, record.field_values, config, submit)
+        for record in load_form_automation_input(input_path)
     ]
 
 

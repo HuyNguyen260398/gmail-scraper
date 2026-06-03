@@ -1,8 +1,8 @@
 ---
 goal: Implement extracted URL form automation from Gmail email content
-version: 1.0
+version: 1.1
 date_created: 2026-06-03
-last_updated: 2026-06-03
+last_updated: 2026-06-04
 owner: Repository maintainers
 status: 'Completed'
 tags: [feature, cli, gmail, browser-automation, playwright]
@@ -12,7 +12,13 @@ tags: [feature, cli, gmail, browser-automation, playwright]
 
 ![Status: Completed](https://img.shields.io/badge/status-Completed-brightgreen)
 
-This plan defines the implementation steps for opening the URL links extracted from Gmail messages, discovering all form inputs on the target web page, filling those inputs with values parsed from the extracted email content, and optionally submitting the form through browser automation.
+This plan defines the implementation steps for opening the URL links extracted from Gmail messages, discovering all form inputs on the target web page, filling those inputs with values parsed from exported JSON content, and optionally submitting the form through browser automation.
+
+The current flow is JSON-first:
+
+1. Fetch Gmail messages and save the full extracted email content to JSON.
+2. Save a second JSON handoff file containing the selected URL and extracted `Mã tra cứu` value.
+3. Run form automation from that handoff JSON so the browser step consumes URL and field values from disk instead of re-parsing Gmail content.
 
 ## 1. Requirements & Constraints
 
@@ -31,6 +37,10 @@ This plan defines the implementation steps for opening the URL links extracted f
 - **REQ-013**: Submit the form only when `--submit-form` is present and the config defines a submit selector or the discovered form has exactly one submit control.
 - **REQ-014**: Return one automation result per processed email containing `email_id`, `url`, `discovered_inputs`, `filled_fields`, `missing_required_fields`, `submitted`, `final_url`, and `status`.
 - **REQ-015**: Print a concise terminal summary after automation: `Automated N URL form(s): S submitted, F filled without submit, E failed.`
+- **REQ-016**: Add an optional `--invoice-code-output PATH` CLI option that writes a second JSON file containing `email_id`, `thread_id`, `subject`, `date`, selected `url`, extracted `invoice_code`, and `field_values`.
+- **REQ-017**: Add an optional `--automation-input PATH` CLI option so form automation can consume URL and field values from an exported JSON handoff file.
+- **REQ-018**: When `--invoice-code-output` and `--automate-form` are used together, form automation must use the newly written invoice-code JSON file as its input.
+- **REQ-019**: Keep the existing direct in-memory automation path available when no JSON handoff file is provided.
 - **SEC-001**: Require the config file to define `url_allowlist` as a non-empty list of hostnames; skip any extracted URL whose hostname is not allowlisted.
 - **SEC-002**: Do not submit forms by default; submission requires explicit `--submit-form`.
 - **SEC-003**: Do not log full filled values to terminal output; terminal summaries may include field names and masked values only.
@@ -119,6 +129,20 @@ This plan defines the implementation steps for opening the URL links extracted f
 | TASK-039 | Run `python3 -m pytest` or `uv run python3 -m pytest` and confirm all non-integration tests pass. | ✅ | 2026-06-03 |
 | TASK-040 | Run `python3 -m playwright install chromium` or `uv run python3 -m playwright install chromium`, then run `python3 -m pytest -m playwright` or `uv run python3 -m pytest -m playwright` and confirm the optional Playwright integration test passes. | ✅ | 2026-06-03 |
 
+### Implementation Phase 6
+
+- GOAL-006: Split extraction and automation with an explicit JSON handoff file.
+
+| Task | Description | Completed | Date |
+|------|-------------|-----------|------|
+| TASK-041 | Add `src/petrolimex.py` with reusable `extract_invoice_lookup_code(...)` so both export and automation use the same `Mã tra cứu` parser. | ✅ | 2026-06-04 |
+| TASK-042 | Add exporter support for `--invoice-code-output`; write a JSON array containing email metadata, selected URL, `invoice_code`, and `field_values.invoice_code`. | ✅ | 2026-06-04 |
+| TASK-043 | Add form automation input loading from the exported JSON handoff file. | ✅ | 2026-06-04 |
+| TASK-044 | Add `--automation-input PATH` so automation can run from an existing JSON handoff without fetching Gmail again. | ✅ | 2026-06-04 |
+| TASK-045 | When `--invoice-code-output` is provided with `--automate-form`, route automation through that JSON file instead of resolving values directly from `Email.body`. | ✅ | 2026-06-04 |
+| TASK-046 | Update `README.md` to document the new three-step flow: full email JSON, invoice-code JSON, then form automation from JSON. | ✅ | 2026-06-04 |
+| TASK-047 | Add focused tests for invoice-code JSON export, automation-input parsing, and CLI routing. | ✅ | 2026-06-04 |
+
 ## 3. Alternatives
 
 - **ALT-001**: Use Selenium WebDriver. This was rejected for the first implementation because Playwright provides modern Python APIs, browser isolation, strong locators, and automatic actionability checks with less setup for this CLI workflow.
@@ -150,6 +174,8 @@ This plan defines the implementation steps for opening the URL links extracted f
 - **FILE-010**: `tests/test_form_automation_fill.py` will cover locator and field-fill routing without launching a browser.
 - **FILE-011**: `tests/test_form_automation_playwright_integration.py` will cover one optional local Playwright fill-and-submit workflow.
 - **FILE-012**: `tests/test_main.py` will be extended for CLI automation wiring.
+- **FILE-013**: `src/petrolimex.py` will contain reusable Petrolimex invoice-code extraction.
+- **FILE-014**: `src/exporter.py` will write the invoice-code JSON handoff file.
 
 ## 6. Testing
 
@@ -162,6 +188,8 @@ This plan defines the implementation steps for opening the URL links extracted f
 - **TEST-007**: Run `python3 -m playwright install chromium` or `uv run python3 -m playwright install chromium`, then run `python3 -m pytest -m playwright` or `uv run python3 -m pytest -m playwright` and confirm optional browser integration passes.
 - **TEST-008**: With valid Gmail credentials and a real `config/form_automation.json`, run `python3 src/main.py "label:Petrolimex" --max 1 --automate-form --automation-output /tmp/form-results.json` and confirm the target page opens headlessly, inputs are discovered, fields are filled, no submission occurs, and JSON results are written.
 - **TEST-009**: With valid Gmail credentials and a real `config/form_automation.json`, run `python3 src/main.py "label:Petrolimex" --max 1 --automate-form --submit-form --automation-output /tmp/form-results.json` and confirm the form submits only for allowlisted URLs.
+- **TEST-010**: Run `python3 -m pytest tests/test_exporter.py tests/test_form_automation_values.py tests/test_main.py` and confirm invoice-code JSON export, automation-input parsing, and CLI routing pass.
+- **TEST-011**: With valid Gmail credentials and a real `config/form_automation.json`, run `python3 src/main.py "label:Petrolimex" --max 1 --output /tmp/emails.json --invoice-code-output /tmp/invoice-codes.json --automate-form --automation-output /tmp/form-results.json` and confirm automation consumes `/tmp/invoice-codes.json`.
 
 ## 7. Risks & Assumptions
 
@@ -170,10 +198,12 @@ This plan defines the implementation steps for opening the URL links extracted f
 - **RISK-003**: Some pages may require login, CAPTCHA, one-time tokens, bot detection bypass prevention, or user interaction; this plan does not bypass those controls.
 - **RISK-004**: Email bodies can contain sensitive values; automation result output must be handled as sensitive data even when terminal logs mask values.
 - **RISK-005**: Playwright browser binaries increase setup size and require an extra install command.
+- **RISK-006**: The invoice-code JSON handoff file contains invoice lookup data and must be treated as sensitive local output.
 - **ASSUMPTION-001**: The previous email link extraction feature provides the target URL in `Email.links`.
 - **ASSUMPTION-002**: The first version can use a JSON mapping file for field-specific email value extraction and selector matching.
 - **ASSUMPTION-003**: The target form is reachable in Chromium and does not require bypassing CAPTCHA, MFA, or access controls.
 - **ASSUMPTION-004**: Processing emails sequentially is acceptable for the first version.
+- **ASSUMPTION-005**: The JSON handoff file is the source of truth for automation when `--automation-input` or `--invoice-code-output` is provided.
 
 ## 8. Related Specifications / Further Reading
 

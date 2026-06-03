@@ -4,7 +4,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from form_automation import build_email_context, load_form_automation_config, resolve_field_values
+from form_automation import (
+    build_email_context,
+    load_form_automation_config,
+    load_form_automation_input,
+    resolve_field_values,
+)
 from gmail_client import Email
 
 
@@ -80,3 +85,26 @@ def test_resolve_field_values_uses_default_when_regex_misses(tmp_path):
     )
 
     assert resolve_field_values(sample_email(), config) == {"optional_code": "N/A"}
+
+
+def test_load_form_automation_input_reads_exported_invoice_code_records(tmp_path):
+    path = tmp_path / "invoice-codes.json"
+    path.write_text(
+        json.dumps(
+            [
+                {
+                    "email_id": "msg-1",
+                    "url": "https://hoadon.petrolimex.com.vn/SearchInvoicebycode/Index",
+                    "invoice_code": "FN2V8BMAG*",
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    records = load_form_automation_input(str(path))
+
+    assert len(records) == 1
+    assert records[0].email_id == "msg-1"
+    assert records[0].url == "https://hoadon.petrolimex.com.vn/SearchInvoicebycode/Index"
+    assert records[0].field_values == {"invoice_code": "FN2V8BMAG*"}

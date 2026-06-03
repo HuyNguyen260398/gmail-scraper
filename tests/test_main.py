@@ -147,3 +147,92 @@ def test_main_runs_form_automation_when_requested(monkeypatch, capsys):
     assert writes[0][1] == "results.json"
     output = capsys.readouterr().out
     assert "Automated 1 URL form(s): 1 submitted, 0 filled without submit, 0 failed." in output
+
+
+def test_main_writes_invoice_code_output_and_uses_it_for_automation(monkeypatch, capsys):
+    writes = []
+    calls = []
+
+    class Result:
+        status = "filled"
+
+    def fake_write_invoice_lookup_codes(emails, output_path, link_index):
+        writes.append((emails, output_path, link_index))
+
+    def fake_automate_form_input_records(input_path, config_path, submit):
+        calls.append((input_path, config_path, submit))
+        return [Result()]
+
+    monkeypatch.setattr(main, "GmailClient", FakeGmailClient)
+    monkeypatch.setattr(
+        main, "write_invoice_lookup_codes", fake_write_invoice_lookup_codes
+    )
+    monkeypatch.setattr(
+        main, "automate_form_input_records", fake_automate_form_input_records
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "main.py",
+            "label:Petrolimex",
+            "--max",
+            "1",
+            "--invoice-code-output",
+            "invoice-codes.json",
+            "--automate-form",
+            "--form-config",
+            "config/form_automation.json",
+        ],
+    )
+
+    main.main()
+
+    assert len(writes) == 1
+    emails, output_path, link_index = writes[0]
+    assert len(emails) == 1
+    assert output_path == "invoice-codes.json"
+    assert link_index == 0
+    assert calls == [("invoice-codes.json", "config/form_automation.json", False)]
+    output = capsys.readouterr().out
+    assert "Saved 1 invoice lookup record(s) to invoice-codes.json." in output
+    assert "Automated 1 URL form(s): 0 submitted, 1 filled without submit, 0 failed." in output
+
+
+def test_main_can_automate_from_existing_json_without_gmail_fetch(monkeypatch, capsys):
+    calls = []
+
+    class Result:
+        status = "submitted"
+
+    def fake_automate_form_input_records(input_path, config_path, submit):
+        calls.append((input_path, config_path, submit))
+        return [Result()]
+
+    class UnexpectedGmailClient:
+        def fetch(self, query: str, max_results: int) -> list[Email]:
+            raise AssertionError("Gmail should not be fetched")
+
+    monkeypatch.setattr(main, "GmailClient", UnexpectedGmailClient)
+    monkeypatch.setattr(
+        main, "automate_form_input_records", fake_automate_form_input_records
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "main.py",
+            "--automate-form",
+            "--automation-input",
+            "invoice-codes.json",
+            "--form-config",
+            "config/form_automation.json",
+            "--submit-form",
+        ],
+    )
+
+    main.main()
+
+    assert calls == [("invoice-codes.json", "config/form_automation.json", True)]
+    output = capsys.readouterr().out
+    assert "Automated 1 URL form(s): 1 submitted, 0 filled without submit, 0 failed." in output

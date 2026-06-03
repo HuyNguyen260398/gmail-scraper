@@ -13,8 +13,12 @@ import os
 
 from dotenv import load_dotenv
 
-from exporter import write_emails
-from form_automation import automate_email_forms, write_automation_results
+from exporter import write_emails, write_invoice_lookup_codes
+from form_automation import (
+    automate_email_forms,
+    automate_form_input_records,
+    write_automation_results,
+)
 from gmail_client import GmailClient
 
 load_dotenv()
@@ -42,6 +46,11 @@ def main():
         choices=["json", "text"],
         default="json",
         help="Output file format when --output is provided.",
+    )
+    parser.add_argument(
+        "--invoice-code-output",
+        default=None,
+        help="Write extracted Petrolimex invoice lookup codes as JSON.",
     )
     parser.add_argument(
         "--automate-form",
@@ -72,22 +81,50 @@ def main():
         default=None,
         help="Write form automation results as JSON.",
     )
+    parser.add_argument(
+        "--automation-input",
+        default=None,
+        help="Read form URL and field values from an extracted JSON file.",
+    )
     args = parser.parse_args()
 
-    client = GmailClient()
-    emails = client.fetch(query=args.query, max_results=args.max)
+    should_fetch = not (
+        args.automation_input
+        and args.automate_form
+        and not args.output
+        and not args.invoice_code_output
+    )
+    emails = []
+    if should_fetch:
+        client = GmailClient()
+        emails = client.fetch(query=args.query, max_results=args.max)
 
     if args.output:
         write_emails(emails, args.output, args.format)
         print(f"Saved {len(emails)} message(s) to {args.output} as {args.format}.")
 
-    if args.automate_form:
-        automation_results = automate_email_forms(
-            emails,
-            args.form_config,
-            args.link_index,
-            args.submit_form,
+    if args.invoice_code_output:
+        write_invoice_lookup_codes(emails, args.invoice_code_output, args.link_index)
+        print(
+            "Saved "
+            f"{len(emails)} invoice lookup record(s) to {args.invoice_code_output}."
         )
+
+    if args.automate_form:
+        automation_input = args.automation_input or args.invoice_code_output
+        if automation_input:
+            automation_results = automate_form_input_records(
+                automation_input,
+                args.form_config,
+                args.submit_form,
+            )
+        else:
+            automation_results = automate_email_forms(
+                emails,
+                args.form_config,
+                args.link_index,
+                args.submit_form,
+            )
         if args.automation_output:
             write_automation_results(automation_results, args.automation_output)
         submitted = sum(1 for result in automation_results if result.status == "submitted")
@@ -98,6 +135,9 @@ def main():
             f"{len(automation_results)} URL form(s): "
             f"{submitted} submitted, {filled} filled without submit, {failed} failed."
         )
+
+    if not should_fetch:
+        return
 
     print(f"Found {len(emails)} message(s) for query: {args.query!r}\n")
     for i, email in enumerate(emails, 1):

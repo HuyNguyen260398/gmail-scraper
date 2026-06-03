@@ -9,6 +9,7 @@ gmail-scraper/
 ├── src/
 │   ├── auth.py           # OAuth2 flow + token caching
 │   ├── exporter.py       # JSON / text export helpers
+│   ├── petrolimex.py     # Petrolimex email value parsing
 │   ├── gmail_client.py   # list / get / parse messages
 │   └── main.py           # CLI entry point
 ├── config/
@@ -97,9 +98,17 @@ uv run python3 src/main.py "label:Petrolimex is:unread" --max 5 --output emails.
 
 Each JSON item includes `id`, `thread_id`, `subject`, `sender`, `date`, `snippet`, `body`, `labels`, and `links`.
 
+For Petrolimex form automation, also write a smaller JSON handoff file that contains the selected URL and extracted `Mã tra cứu` value:
+
+```bash
+python3 src/main.py "label:Petrolimex" --max 1 --output tmp/emails.json --invoice-code-output tmp/invoice-codes.json
+```
+
+Each invoice-code JSON item includes `email_id`, `thread_id`, `subject`, `date`, `url`, `invoice_code`, and `field_values`. The `field_values` object is what form automation uses to fill configured page fields, for example `{"invoice_code": "FN2V8BMAG*"}`.
+
 ## Automating extracted URL forms
 
-Form automation is opt-in. It uses the links extracted from each email, opens the selected HTTPS URL in Chromium, discovers form inputs, fills configured fields from email content, and submits only when `--submit-form` is provided.
+Form automation is opt-in. The preferred flow is JSON-first: fetch Gmail content, write the full email JSON, write the derived invoice-code JSON, then run automation from that derived JSON. Automation opens the selected HTTPS URL in Chromium, discovers form inputs, fills configured fields from the JSON `field_values`, and submits only when `--submit-form` is provided.
 
 The checked-in example targets the Petrolimex invoice-code form. It fills `Mã tra cứu HĐ` from email text like `Mã tra cứu: FN2V8BMAG*`. The website-generated captcha fields, `Mã xác thực` and `Nhập mã xác thực`, remain manual.
 
@@ -112,25 +121,33 @@ cp config/form_automation.example.json config/form_automation.json
 Dry-run fill without submitting:
 
 ```bash
-python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config config/form_automation.json --automation-output /tmp/form-results.json
+python3 src/main.py "label:Petrolimex" --max 1 --output tmp/emails.json --invoice-code-output tmp/invoice-codes.json
+python3 src/main.py --automate-form --automation-input tmp/invoice-codes.json --form-config config/form_automation.json --automation-output tmp/form-results.json
 ```
 
 Submit the form after filling and manual captcha entry:
 
 ```bash
-python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config config/form_automation.json --submit-form
+python3 src/main.py --automate-form --automation-input tmp/invoice-codes.json --form-config config/form_automation.json --submit-form
+```
+
+You can also fetch, write both JSON files, and automate in one command. In that mode, automation reads the file passed to `--invoice-code-output`:
+
+```bash
+python3 src/main.py "label:Petrolimex" --max 1 --output tmp/emails.json --invoice-code-output tmp/invoice-codes.json --automate-form --form-config config/form_automation.json --automation-output tmp/form-results.json
 ```
 
 Or using `uv`:
 
 ```bash
-uv run python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config config/form_automation.json --automation-output /tmp/form-results.json
-uv run python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config config/form_automation.json --submit-form
+uv run python3 src/main.py "label:Petrolimex" --max 1 --output tmp/emails.json --invoice-code-output tmp/invoice-codes.json
+uv run python3 src/main.py --automate-form --automation-input tmp/invoice-codes.json --form-config config/form_automation.json --automation-output tmp/form-results.json
+uv run python3 src/main.py --automate-form --automation-input tmp/invoice-codes.json --form-config config/form_automation.json --submit-form
 ```
 
 For Petrolimex, Chromium opens visibly even if the config has `headless` set differently. After `Mã tra cứu HĐ` is filled, type the captcha shown beside `Mã xác thực` into `Nhập mã xác thực`, then press Enter in the terminal to continue. Without `--submit-form`, the browser is left filled but not submitted.
 
-`config/form_automation.json` is gitignored because selectors and field mapping rules may contain sensitive site-specific data. The config must include a non-empty `url_allowlist`; URLs outside those hostnames are skipped.
+`config/form_automation.json` is gitignored because selectors and field mapping rules may contain sensitive site-specific data. Treat `tmp/emails.json`, `tmp/invoice-codes.json`, and `tmp/form-results.json` as sensitive local artifacts because they can contain invoice data. The config must include a non-empty `url_allowlist`; URLs outside those hostnames are skipped.
 
 ## Gmail search syntax (the `query` arg)
 
