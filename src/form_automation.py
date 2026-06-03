@@ -27,6 +27,7 @@ class FormFieldRule:
     selector_name: str | None = None
     input_type: str = "text"
     required: bool = True
+    requires_manual_input: bool = False
 
 
 @dataclass
@@ -37,6 +38,7 @@ class FormAutomationConfig:
     field_values: list[FieldValueRule]
     form_fields: list[FormFieldRule]
     submit_selector: dict | None
+    manual_after_fill: bool = False
 
 
 @dataclass
@@ -118,6 +120,7 @@ def load_form_automation_config(path: str) -> FormAutomationConfig:
         field_values=field_values,
         form_fields=form_fields,
         submit_selector=submit_selector,
+        manual_after_fill=bool(raw.get("manual_after_fill", False)),
     )
 
 
@@ -138,6 +141,14 @@ def build_email_context(email: Email) -> dict[str, str]:
     }
 
 
+def extract_invoice_lookup_code(text: str) -> str | None:
+    """Extract a Petrolimex invoice lookup code from email body text."""
+    match = re.search(r"Mã\s+tra\s+cứu\s*:\s*([^\s\r\n]+)", text, flags=re.IGNORECASE)
+    if not match:
+        return None
+    return match.group(1).strip()
+
+
 def resolve_field_values(
     email: Email, config: FormAutomationConfig
 ) -> dict[str, str]:
@@ -146,6 +157,16 @@ def resolve_field_values(
     values: dict[str, str] = {}
 
     for rule in config.field_values:
+        if rule.source == "petrolimex_invoice_code":
+            invoice_code = extract_invoice_lookup_code(email.body)
+            if invoice_code:
+                values[rule.key] = invoice_code
+            elif rule.default is not None:
+                values[rule.key] = rule.default
+            else:
+                raise ValueError("Petrolimex invoice lookup code not found in email body.")
+            continue
+
         if rule.source not in context:
             raise ValueError(f"Unknown field value source: {rule.source}")
 
@@ -301,6 +322,16 @@ def submit_page(page, submit_selector: dict | None) -> bool:
     return False
 
 
+def wait_for_manual_completion(
+    page, config: FormAutomationConfig, submit: bool
+) -> bool:
+    """Wait for the user to complete manual fields before optional submission."""
+    input("Press Enter after entering captcha in the browser...")
+    if submit:
+        return submit_page(page, config.submit_selector)
+    return False
+
+
 def automate_email_form(
     email: Email, config: FormAutomationConfig, link_index: int, submit: bool
 ) -> FormAutomationResult:
@@ -320,7 +351,9 @@ def automate_email_form(
         from playwright.sync_api import sync_playwright
 
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=config.headless)
+            browser = playwright.chromium.launch(
+                headless=False if config.manual_after_fill else config.headless
+            )
             try:
                 context = browser.new_context()
                 try:
@@ -333,6 +366,9 @@ def automate_email_form(
                     missing_required_fields = []
 
                     for rule in config.form_fields:
+                        if rule.requires_manual_input:
+                            continue
+
                         value = field_values.get(rule.field_key, "")
                         if not value:
                             if rule.required:
@@ -342,7 +378,9 @@ def automate_email_form(
                         filled_fields.append(rule.field_key)
 
                     submitted = False
-                    if submit and not missing_required_fields:
+                    if config.manual_after_fill and not missing_required_fields:
+                        submitted = wait_for_manual_completion(page, config, submit)
+                    elif submit and not missing_required_fields:
                         submitted = submit_page(page, config.submit_selector)
 
                     status = "submitted" if submitted else "filled"
@@ -437,6 +475,9 @@ def _load_form_field_rules(raw_rules) -> list[FormFieldRule]:
                     selector_name=raw_rule.get("selector_name"),
                     input_type=raw_rule.get("input_type", "text"),
                     required=bool(raw_rule.get("required", True)),
+                    requires_manual_input=bool(
+                        raw_rule.get("requires_manual_input", False)
+                    ),
                 )
             )
         except KeyError as exc:

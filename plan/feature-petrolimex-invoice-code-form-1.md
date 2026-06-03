@@ -4,13 +4,13 @@ version: 1.0
 date_created: 2026-06-03
 last_updated: 2026-06-03
 owner: Repository maintainers
-status: 'Planned'
+status: 'Completed'
 tags: [feature, gmail, petrolimex, browser-automation, captcha]
 ---
 
 # Introduction
 
-![Status: Planned](https://img.shields.io/badge/status-Planned-blue)
+![Status: Completed](https://img.shields.io/badge/status-Completed-brightgreen)
 
 This plan updates the existing form automation flow so the CLI can open the Petrolimex electronic invoice lookup page, fill the `Mã tra cứu HĐ` field from Gmail email content, and support the required captcha step without attempting to bypass it. The sample source text is `assets/sample-email-content.txt`, where the required invoice lookup value appears as `Mã tra cứu: FN2V8BMAG*`.
 
@@ -44,11 +44,11 @@ This plan updates the existing form automation flow so the CLI can open the Petr
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-001 | Add function `extract_invoice_lookup_code(text: str) -> str | None` to `src/form_automation.py` after `build_email_context(...)`; use regex `r"Mã\s+tra\s+cứu\s*:\s*([^\s\r\n]+)"` with `re.IGNORECASE` and return the stripped first capture group. | | |
-| TASK-002 | Update `resolve_field_values(...)` in `src/form_automation.py` lines 141-170 to support a new `FieldValueRule.source` value `petrolimex_invoice_code`; when this source is used, call `extract_invoice_lookup_code(email.body)` instead of reading a direct context key. | | |
-| TASK-003 | When `petrolimex_invoice_code` extraction returns `None` and no rule default exists, raise `ValueError("Petrolimex invoice lookup code not found in email body.")`. | | |
-| TASK-004 | Add `tests/test_petrolimex_invoice_code.py` with a fixture that reads `assets/sample-email-content.txt` using `Path(...).read_text(encoding="utf-8")` and asserts `extract_invoice_lookup_code(...) == "FN2V8BMAG*"`. | | |
-| TASK-005 | In `tests/test_petrolimex_invoice_code.py`, add a `resolve_field_values(...)` test using an `Email` whose `body` is the sample file content and a config rule `{"key": "invoice_code", "source": "petrolimex_invoice_code"}`. | | |
+| TASK-001 | Add function `extract_invoice_lookup_code(text: str) -> str | None` to `src/form_automation.py` after `build_email_context(...)`; use regex `r"Mã\s+tra\s+cứu\s*:\s*([^\s\r\n]+)"` with `re.IGNORECASE` and return the stripped first capture group. | ✅ | 2026-06-03 |
+| TASK-002 | Update `resolve_field_values(...)` in `src/form_automation.py` lines 141-170 to support a new `FieldValueRule.source` value `petrolimex_invoice_code`; when this source is used, call `extract_invoice_lookup_code(email.body)` instead of reading a direct context key. | ✅ | 2026-06-03 |
+| TASK-003 | When `petrolimex_invoice_code` extraction returns `None` and no rule default exists, raise `ValueError("Petrolimex invoice lookup code not found in email body.")`. | ✅ | 2026-06-03 |
+| TASK-004 | Add `tests/test_petrolimex_invoice_code.py` with a fixture that reads `assets/sample-email-content.txt` using `Path(...).read_text(encoding="utf-8")` and asserts `extract_invoice_lookup_code(...) == "FN2V8BMAG*"`. | ✅ | 2026-06-03 |
+| TASK-005 | In `tests/test_petrolimex_invoice_code.py`, add a `resolve_field_values(...)` test using an `Email` whose `body` is the sample file content and a config rule `{"key": "invoice_code", "source": "petrolimex_invoice_code"}`. | ✅ | 2026-06-03 |
 
 ### Implementation Phase 2
 
@@ -56,13 +56,13 @@ This plan updates the existing form automation flow so the CLI can open the Petr
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-006 | Add field `manual_after_fill: bool` to `FormAutomationConfig` in `src/form_automation.py` lines 32-39 with default value `False`. | | |
-| TASK-007 | Update `load_form_automation_config(...)` in `src/form_automation.py` lines 89-121 to read `manual_after_fill` from JSON with `bool(raw.get("manual_after_fill", False))`. | | |
-| TASK-008 | Add field `requires_manual_input: bool = False` to `FormFieldRule` in `src/form_automation.py` lines 22-29. | | |
-| TASK-009 | Update `_load_form_field_rules(...)` in `src/form_automation.py` lines 420-446 to read `requires_manual_input` from each form field rule with default `False`. | | |
-| TASK-010 | Update `automate_email_form(...)` in `src/form_automation.py` lines 304-372 so fields marked `requires_manual_input=True` are not considered missing when no email-derived value exists. | | |
-| TASK-011 | Add helper function `wait_for_manual_completion(page, config: FormAutomationConfig, submit: bool) -> bool` in `src/form_automation.py`; it must print concise instructions, call Python `input("Press Enter after entering captcha in the browser...")`, and call `submit_page(...)` only when `submit` is `True`. | | |
-| TASK-012 | Update `automate_email_form(...)` so when `config.manual_after_fill` is `True`, Chromium launches with `headless=False` regardless of the config `headless` value, fills configured non-manual fields, waits for manual captcha completion, then records status `submitted` when submission occurs or `filled` when no submission is requested. | | |
+| TASK-006 | Add field `manual_after_fill: bool` to `FormAutomationConfig` in `src/form_automation.py` lines 32-39 with default value `False`. | ✅ | 2026-06-03 |
+| TASK-007 | Update `load_form_automation_config(...)` in `src/form_automation.py` lines 89-121 to read `manual_after_fill` from JSON with `bool(raw.get("manual_after_fill", False))`. | ✅ | 2026-06-03 |
+| TASK-008 | Add field `requires_manual_input: bool = False` to `FormFieldRule` in `src/form_automation.py` lines 22-29. | ✅ | 2026-06-03 |
+| TASK-009 | Update `_load_form_field_rules(...)` in `src/form_automation.py` lines 420-446 to read `requires_manual_input` from each form field rule with default `False`. | ✅ | 2026-06-03 |
+| TASK-010 | Update `automate_email_form(...)` in `src/form_automation.py` lines 304-372 so fields marked `requires_manual_input=True` are not considered missing when no email-derived value exists. | ✅ | 2026-06-03 |
+| TASK-011 | Add helper function `wait_for_manual_completion(page, config: FormAutomationConfig, submit: bool) -> bool` in `src/form_automation.py`; it must print concise instructions, call Python `input("Press Enter after entering captcha in the browser...")`, and call `submit_page(...)` only when `submit` is `True`. | ✅ | 2026-06-03 |
+| TASK-012 | Update `automate_email_form(...)` so when `config.manual_after_fill` is `True`, Chromium launches with `headless=False` regardless of the config `headless` value, fills configured non-manual fields, waits for manual captcha completion, then records status `submitted` when submission occurs or `filled` when no submission is requested. | ✅ | 2026-06-03 |
 
 ### Implementation Phase 3
 
@@ -70,11 +70,11 @@ This plan updates the existing form automation flow so the CLI can open the Petr
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-013 | Replace `config/form_automation.example.json` with a Petrolimex invoice-code example containing `url_allowlist: ["hoadon.petrolimex.com.vn"]`, `headless: false`, `manual_after_fill: true`, and `timeout_ms: 30000`. | | |
-| TASK-014 | In `config/form_automation.example.json`, set `field_values` to one rule: `{"key": "invoice_code", "source": "petrolimex_invoice_code"}`. | | |
-| TASK-015 | In `config/form_automation.example.json`, set `form_fields` rule for invoice code to `{"field_key": "invoice_code", "selector_strategy": "id", "selector_value": "strFkey", "input_type": "text", "required": true}`. | | |
-| TASK-016 | In `config/form_automation.example.json`, add a captcha field rule `{"field_key": "captcha", "selector_strategy": "id", "selector_value": "captch", "input_type": "text", "required": true, "requires_manual_input": true}`. | | |
-| TASK-017 | In `config/form_automation.example.json`, set `submit_selector` to `{"selector_strategy": "css", "selector_value": "#SearchformByfkey input[type=\"submit\"]"}` so submission targets the invoice-code tab form only. | | |
+| TASK-013 | Replace `config/form_automation.example.json` with a Petrolimex invoice-code example containing `url_allowlist: ["hoadon.petrolimex.com.vn"]`, `headless: false`, `manual_after_fill: true`, and `timeout_ms: 30000`. | ✅ | 2026-06-03 |
+| TASK-014 | In `config/form_automation.example.json`, set `field_values` to one rule: `{"key": "invoice_code", "source": "petrolimex_invoice_code"}`. | ✅ | 2026-06-03 |
+| TASK-015 | In `config/form_automation.example.json`, set `form_fields` rule for invoice code to `{"field_key": "invoice_code", "selector_strategy": "id", "selector_value": "strFkey", "input_type": "text", "required": true}`. | ✅ | 2026-06-03 |
+| TASK-016 | In `config/form_automation.example.json`, add a captcha field rule `{"field_key": "captcha", "selector_strategy": "id", "selector_value": "captch", "input_type": "text", "required": true, "requires_manual_input": true}`. | ✅ | 2026-06-03 |
+| TASK-017 | In `config/form_automation.example.json`, set `submit_selector` to `{"selector_strategy": "css", "selector_value": "#SearchformByfkey input[type=\"submit\"]"}` so submission targets the invoice-code tab form only. | ✅ | 2026-06-03 |
 
 ### Implementation Phase 4
 
@@ -82,10 +82,10 @@ This plan updates the existing form automation flow so the CLI can open the Petr
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-018 | Update `src/main.py` help text for `--submit-form` on lines 62-66 to state that captcha-protected forms require user captcha entry before submission. | | |
-| TASK-019 | Update `README.md` with a Petrolimex example command: `python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config config/form_automation.json --submit-form`. | | |
-| TASK-020 | Update `README.md` to instruct users to copy `config/form_automation.example.json` to `config/form_automation.json`, keep the browser window open, type the captcha shown beside `Mã xác thực`, then press Enter in the terminal to continue. | | |
-| TASK-021 | Update `README.md` to document that `Mã tra cứu HĐ` is filled from email text like `Mã tra cứu: FN2V8BMAG*`, while `Nhập mã xác thực` is manual because the captcha is generated by the website. | | |
+| TASK-018 | Update `src/main.py` help text for `--submit-form` on lines 62-66 to state that captcha-protected forms require user captcha entry before submission. | ✅ | 2026-06-03 |
+| TASK-019 | Update `README.md` with a Petrolimex example command: `python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config config/form_automation.json --submit-form`. | ✅ | 2026-06-03 |
+| TASK-020 | Update `README.md` to instruct users to copy `config/form_automation.example.json` to `config/form_automation.json`, keep the browser window open, type the captcha shown beside `Mã xác thực`, then press Enter in the terminal to continue. | ✅ | 2026-06-03 |
+| TASK-021 | Update `README.md` to document that `Mã tra cứu HĐ` is filled from email text like `Mã tra cứu: FN2V8BMAG*`, while `Nhập mã xác thực` is manual because the captcha is generated by the website. | ✅ | 2026-06-03 |
 
 ### Implementation Phase 5
 
@@ -93,11 +93,11 @@ This plan updates the existing form automation flow so the CLI can open the Petr
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-022 | Update `tests/test_form_automation_config.py` to assert `manual_after_fill` defaults to `False` when omitted and loads as `True` when present. | | |
-| TASK-023 | Update `tests/test_form_automation_config.py` to assert `requires_manual_input` defaults to `False` and loads as `True` for the captcha rule. | | |
-| TASK-024 | Update `tests/test_form_automation_fill.py` or add a new fake-page unit test proving that a required manual captcha field without a resolved email value does not add `captcha` to `missing_required_fields`. | | |
-| TASK-025 | Run `python3 -m pytest tests/test_petrolimex_invoice_code.py tests/test_form_automation_config.py tests/test_form_automation_values.py tests/test_form_automation_fill.py`. | | |
-| TASK-026 | Run `python3 -m pytest` and confirm the full existing test suite passes. | | |
+| TASK-022 | Update `tests/test_form_automation_config.py` to assert `manual_after_fill` defaults to `False` when omitted and loads as `True` when present. | ✅ | 2026-06-03 |
+| TASK-023 | Update `tests/test_form_automation_config.py` to assert `requires_manual_input` defaults to `False` and loads as `True` for the captcha rule. | ✅ | 2026-06-03 |
+| TASK-024 | Update `tests/test_form_automation_fill.py` or add a new fake-page unit test proving that a required manual captcha field without a resolved email value does not add `captcha` to `missing_required_fields`. | ✅ | 2026-06-03 |
+| TASK-025 | Run `python3 -m pytest tests/test_petrolimex_invoice_code.py tests/test_form_automation_config.py tests/test_form_automation_values.py tests/test_form_automation_fill.py`. | ✅ | 2026-06-03 |
+| TASK-026 | Run `python3 -m pytest` and confirm the full existing test suite passes. | ✅ | 2026-06-03 |
 
 ## 3. Alternatives
 

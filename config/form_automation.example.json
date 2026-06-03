@@ -1,40 +1,35 @@
 {
   "url_allowlist": [
-    "portal.petrolimex.com.vn"
+    "hoadon.petrolimex.com.vn"
   ],
-  "headless": true,
+  "headless": false,
+  "manual_after_fill": true,
   "timeout_ms": 30000,
   "field_values": [
     {
       "key": "invoice_code",
-      "source": "body",
-      "regex": "Invoice(?: code)?:\\s*([A-Za-z0-9-]+)",
-      "group": 1
-    },
-    {
-      "key": "customer_email",
-      "source": "sender_email"
+      "source": "petrolimex_invoice_code"
     }
   ],
   "form_fields": [
     {
       "field_key": "invoice_code",
-      "selector_strategy": "label",
-      "selector_value": "Invoice code",
+      "selector_strategy": "id",
+      "selector_value": "strFkey",
       "input_type": "text",
       "required": true
     },
     {
-      "field_key": "customer_email",
-      "selector_strategy": "name",
-      "selector_value": "email",
-      "input_type": "email",
-      "required": false
+      "field_key": "captcha",
+      "selector_strategy": "id",
+      "selector_value": "captch",
+      "input_type": "text",
+      "required": true,
+      "requires_manual_input": true
     }
   ],
   "submit_selector": {
-    "selector_strategy": "role",
-    "selector_name": "button",
-    "selector_value": "Submit"
+    "selector_strategy": "css",
+    "selector_value": "#SearchformByfkey input[type=\"submit\"]"
   }
 }

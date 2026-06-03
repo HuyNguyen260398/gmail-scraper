@@ -62,7 +62,10 @@ def main():
     parser.add_argument(
         "--submit-form",
         action="store_true",
-        help="Submit the form after filling fields.",
+        help=(
+            "Submit the form after filling fields. Captcha-protected forms "
+            "require user captcha entry before submission."
+        ),
     )
     parser.add_argument(
         "--automation-output",

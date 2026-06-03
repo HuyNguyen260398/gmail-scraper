@@ -62,9 +62,33 @@ def test_load_form_automation_config_reads_valid_config(tmp_path):
     assert config.url_allowlist == ["portal.example.com"]
     assert config.headless is True
     assert config.timeout_ms == 10000
+    assert config.manual_after_fill is False
     assert config.field_values[0].key == "invoice_code"
     assert config.form_fields[0].selector_strategy == "label"
+    assert config.form_fields[0].requires_manual_input is False
     assert config.submit_selector["selector_value"] == "Submit"
+
+
+def test_load_form_automation_config_reads_manual_captcha_options(tmp_path):
+    data = valid_config()
+    data["manual_after_fill"] = True
+    data["form_fields"].append(
+        {
+            "field_key": "captcha",
+            "selector_strategy": "id",
+            "selector_value": "captch",
+            "input_type": "text",
+            "required": True,
+            "requires_manual_input": True,
+        }
+    )
+    path = write_config(tmp_path, data)
+
+    config = load_form_automation_config(str(path))
+
+    assert config.manual_after_fill is True
+    assert config.form_fields[1].field_key == "captcha"
+    assert config.form_fields[1].requires_manual_input is True
 
 
 def test_load_form_automation_config_requires_url_allowlist(tmp_path):

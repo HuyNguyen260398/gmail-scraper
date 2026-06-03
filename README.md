@@ -101,6 +101,8 @@ Each JSON item includes `id`, `thread_id`, `subject`, `sender`, `date`, `snippet
 
 Form automation is opt-in. It uses the links extracted from each email, opens the selected HTTPS URL in Chromium, discovers form inputs, fills configured fields from email content, and submits only when `--submit-form` is provided.
 
+The checked-in example targets the Petrolimex invoice-code form. It fills `Mã tra cứu HĐ` from email text like `Mã tra cứu: FN2V8BMAG*`. The website-generated captcha fields, `Mã xác thực` and `Nhập mã xác thực`, remain manual.
+
 Create a local config from the example:
 
 ```bash
@@ -110,10 +112,10 @@ cp config/form_automation.example.json config/form_automation.json
 Dry-run fill without submitting:
 
 ```bash
-python3 src/main.py "label:Petrolimex" --max 1 --automate-form --automation-output /tmp/form-results.json
+python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config config/form_automation.json --automation-output /tmp/form-results.json
 ```
 
-Submit the form after filling:
+Submit the form after filling and manual captcha entry:
 
 ```bash
 python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config config/form_automation.json --submit-form
@@ -122,9 +124,11 @@ python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config con
 Or using `uv`:
 
 ```bash
-uv run python3 src/main.py "label:Petrolimex" --max 1 --automate-form --automation-output /tmp/form-results.json
+uv run python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config config/form_automation.json --automation-output /tmp/form-results.json
 uv run python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config config/form_automation.json --submit-form
 ```
+
+For Petrolimex, Chromium opens visibly even if the config has `headless` set differently. After `Mã tra cứu HĐ` is filled, type the captcha shown beside `Mã xác thực` into `Nhập mã xác thực`, then press Enter in the terminal to continue. Without `--submit-form`, the browser is left filled but not submitted.
 
 `config/form_automation.json` is gitignored because selectors and field mapping rules may contain sensitive site-specific data. The config must include a non-empty `url_allowlist`; URLs outside those hostnames are skipped.
 
