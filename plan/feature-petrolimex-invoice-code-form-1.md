@@ -1,18 +1,45 @@
 ---
 goal: Fill Petrolimex invoice-code lookup form from Gmail email content
-version: 1.0
+version: 1.2
 date_created: 2026-06-03
-last_updated: 2026-06-03
+last_updated: 2026-06-05
 owner: Repository maintainers
-status: 'Completed'
+status: 'Blocked on third-party CAPTCHA bypass'
 tags: [feature, gmail, petrolimex, browser-automation, captcha]
 ---
 
 # Introduction
 
-![Status: Completed](https://img.shields.io/badge/status-Completed-brightgreen)
+![Status: Blocked](https://img.shields.io/badge/status-Blocked-red)
 
 This plan updates the existing form automation flow so the CLI can open the Petrolimex electronic invoice lookup page, fill the `Mã tra cứu HĐ` field from Gmail email content, and support the required captcha step without attempting to bypass it. The sample source text is `assets/sample-email-content.txt`, where the required invoice lookup value appears as `Mã tra cứu: FN2V8BMAG*`.
+
+## Research Update: Captcha Handling
+
+The selected solution is not full CAPTCHA solving. CAPTCHA is an access-control mechanism, so this project will not use OCR, trained models, browser-fingerprint workarounds, or third-party solving services to bypass it.
+
+The practical Python solution is human-in-the-loop automation:
+
+1. Playwright fills all non-CAPTCHA fields from the exported JSON handoff.
+2. Playwright captures the CAPTCHA image element to a local file using an element screenshot.
+3. The CLI prompts the user to read that image or the visible browser window and type the CAPTCHA value.
+4. Playwright fills the configured CAPTCHA input with the user-provided text.
+5. If `--submit-form` is present, Playwright clicks the configured submit selector.
+
+This uses normal Playwright primitives: `locator.screenshot(...)` for element capture, `locator.fill(...)` for text inputs, and headed mode or `page.pause()` only when manual inspection is needed.
+
+## Blocked Point: Full CAPTCHA Autofill
+
+Full zero-touch CAPTCHA autofill for the Petrolimex public site is blocked. The requested behavior would require bypassing or defeating a third-party anti-automation control. This project must not implement or document OCR-based solving, trained CAPTCHA recognition, browser-fingerprint evasion, token replay, CAPTCHA farm integrations, or third-party solver APIs for that purpose.
+
+This block affects only the CAPTCHA step. The rest of the automation remains valid:
+
+- Gmail extraction can run unattended.
+- Full email JSON and invoice-code JSON handoff files can be generated unattended.
+- Browser automation can open the URL and fill `Mã tra cứu HĐ` unattended.
+- Submission can be automated after a supported CAPTCHA path is available.
+
+Unblocking requires one of the compliant alternatives listed below, preferably an official Petrolimex integration or an authorized no-CAPTCHA environment.
 
 ## 1. Requirements & Constraints
 
@@ -26,6 +53,13 @@ This plan updates the existing form automation flow so the CLI can open the Petr
 - **REQ-008**: Support a manual captcha flow that keeps the browser open after filling `strFkey`, lets the user enter captcha text into DOM field `id="captch"` and `name="captch"`, and then submits only after explicit user action or explicit CLI submission mode.
 - **REQ-009**: Keep current `--automate-form` behavior available for generic forms; Petrolimex-specific behavior must be opt-in through config and/or a focused CLI flag.
 - **REQ-010**: Update `config/form_automation.example.json` so it contains a working Petrolimex invoice-code example instead of the current generic portal example.
+- **REQ-011**: Add config support for a CAPTCHA image selector, for example `captcha_image_selector`, using the same selector strategy pattern as form fields.
+- **REQ-012**: Add config support for a local CAPTCHA screenshot output directory, defaulting to `tmp/captcha`.
+- **REQ-013**: When a manual CAPTCHA field is present, capture the CAPTCHA image element screenshot before prompting the user.
+- **REQ-014**: Prompt the user for the CAPTCHA text in the terminal and fill the configured CAPTCHA input with the typed value.
+- **REQ-015**: Never persist the user-entered CAPTCHA value in automation result JSON.
+- **REQ-016**: If the CAPTCHA image selector is missing or cannot be captured, fall back to the current headed-browser manual entry flow.
+- **REQ-017**: Full CAPTCHA autofill remains out of scope unless Petrolimex provides an official API, integration contract, or documented machine-access path that removes the need to bypass CAPTCHA.
 - **SEC-001**: Keep `config/form_automation.json` gitignored because it can contain local operational choices.
 - **SEC-002**: Keep URL allowlisting mandatory; Petrolimex automation must allow only `hoadon.petrolimex.com.vn`.
 - **SEC-003**: Do not log the full extracted invoice lookup code to terminal output unless the user explicitly asks for verbose diagnostics.
@@ -99,12 +133,34 @@ This plan updates the existing form automation flow so the CLI can open the Petr
 | TASK-025 | Run `python3 -m pytest tests/test_petrolimex_invoice_code.py tests/test_form_automation_config.py tests/test_form_automation_values.py tests/test_form_automation_fill.py`. | ✅ | 2026-06-03 |
 | TASK-026 | Run `python3 -m pytest` and confirm the full existing test suite passes. | ✅ | 2026-06-03 |
 
+### Implementation Phase 6
+
+- GOAL-006: Improve CAPTCHA handling with a human-in-the-loop screenshot and terminal prompt.
+
+| Task | Description | Completed | Date |
+|------|-------------|-----------|------|
+| TASK-027 | Add a dataclass for optional manual CAPTCHA config, including `image_selector_strategy`, `image_selector_value`, `input_field_key`, and `screenshot_dir`. | ⬜ | |
+| TASK-028 | Update `load_form_automation_config(...)` to parse the optional CAPTCHA config and default `screenshot_dir` to `tmp/captcha`. | ⬜ | |
+| TASK-029 | Add helper `capture_manual_captcha(page, config, email_id) -> str | None` that locates the CAPTCHA image and writes an element screenshot path such as `tmp/captcha/msg-1-captcha.png`. | ⬜ | |
+| TASK-030 | Add helper `prompt_for_manual_field(field_label: str, screenshot_path: str | None) -> str` that asks the user for the CAPTCHA value without logging it elsewhere. | ⬜ | |
+| TASK-031 | Update `wait_for_manual_completion(...)` so it captures the CAPTCHA image, prompts for user text, fills the `requires_manual_input=True` CAPTCHA input, and only then optionally submits. | ⬜ | |
+| TASK-032 | Update `config/form_automation.example.json` with the Petrolimex CAPTCHA image selector once confirmed from the live page. | ⬜ | |
+| TASK-033 | Update README instructions to show the new `tmp/captcha/...png` screenshot path and terminal prompt behavior. | ⬜ | |
+| TASK-034 | Add unit tests proving manual CAPTCHA fields are filled from prompted text and the prompted value is not written to `FormAutomationResult`. | ⬜ | |
+| TASK-035 | Add a fake-page test proving CAPTCHA screenshot capture uses the configured selector and gracefully falls back when capture fails. | ⬜ | |
+
 ## 3. Alternatives
 
 - **ALT-001**: Hard-code Petrolimex selectors and regex directly in `src/main.py`. This is rejected because `src/main.py` should remain CLI orchestration only, and the existing config-based automation module already owns selectors and field extraction.
 - **ALT-002**: Use OCR or an external captcha-solving service for `Mã xác thực`. This is rejected because captcha is an access-control mechanism and the project should not bypass it.
 - **ALT-003**: Require the captcha value to come from email content. This is rejected because the sample email content contains `Mã tra cứu`, `Mẫu số`, `Ký hiệu`, and `Số hóa đơn`, but it does not contain the website captcha value.
 - **ALT-004**: Use the invoice-detail tab with `MST người bán`, `Ký hiệu hóa đơn`, and `Số hóa đơn`. This is rejected for this update because the user explicitly chose the invoice-code form with `Mã tra cứu HĐ`.
+- **ALT-005**: Use `page.pause()` as the main user workflow. This is useful for debugging and remains a fallback, but a terminal prompt plus CAPTCHA element screenshot is faster and easier to test.
+- **ALT-006**: Request an official Petrolimex invoice lookup API or partner integration. This is the preferred path for true unattended automation because it avoids browser scraping and CAPTCHA bypass entirely.
+- **ALT-007**: Ask Petrolimex for an allowlisted account, API key, service credential, or server-to-server workflow for authorized automated invoice lookup.
+- **ALT-008**: Use a test or staging environment owned by the project where CAPTCHA is disabled by configuration. This is acceptable only for environments controlled by the project or explicitly authorized by the site owner.
+- **ALT-009**: Split the workflow into a queue: run extraction and form prefill automatically, then mark records as `requires_manual_captcha` for later human completion. This preserves reliable unattended extraction while making the CAPTCHA block explicit.
+- **ALT-010**: If Petrolimex emails include enough invoice metadata, avoid the CAPTCHA page and export the email-derived invoice details directly for downstream processing.
 
 ## 4. Dependencies
 
@@ -115,6 +171,8 @@ This plan updates the existing form automation flow so the CLI can open the Petr
 - **DEP-005**: Existing `assets/sample-email-content.txt` sample fixture.
 - **DEP-006**: Runtime dependency `playwright` already listed in `requirements.txt`.
 - **DEP-007**: Test dependency `pytest` already used by the repo.
+- **DEP-008**: Playwright `locator.screenshot(...)` for CAPTCHA element capture.
+- **DEP-009**: Existing Playwright `locator.fill(...)` behavior for entering the user-provided CAPTCHA text.
 
 ## 5. Files
 
@@ -125,6 +183,9 @@ This plan updates the existing form automation flow so the CLI can open the Petr
 - **FILE-005**: `tests/test_petrolimex_invoice_code.py` will cover sample email extraction and config-based field value resolution.
 - **FILE-006**: `tests/test_form_automation_config.py` will cover the new config fields.
 - **FILE-007**: `tests/test_form_automation_fill.py` will cover required manual field handling.
+- **FILE-008**: `src/form_automation.py` will add CAPTCHA screenshot capture, prompt handling, and manual field filling.
+- **FILE-009**: `config/form_automation.example.json` will document the Petrolimex CAPTCHA image selector and screenshot directory.
+- **FILE-010**: `tests/test_form_automation_fill.py` will cover screenshot capture and prompt-to-fill behavior.
 
 ## 6. Testing
 
@@ -135,6 +196,8 @@ This plan updates the existing form automation flow so the CLI can open the Petr
 - **TEST-005**: `python3 -m pytest` must pass for the complete test suite.
 - **TEST-006**: Manual verification command `python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config config/form_automation.json` must open the Petrolimex page, fill `Mã tra cứu HĐ`, leave captcha for manual entry, and avoid submission when `--submit-form` is absent.
 - **TEST-007**: Manual verification command `python3 src/main.py "label:Petrolimex" --max 1 --automate-form --form-config config/form_automation.json --submit-form` must open the Petrolimex page, fill `Mã tra cứu HĐ`, wait for user captcha entry, then submit after terminal confirmation.
+- **TEST-008**: `python3 -m pytest tests/test_form_automation_config.py tests/test_form_automation_fill.py` must pass after adding CAPTCHA screenshot config and prompt behavior.
+- **TEST-009**: Manual verification with real Petrolimex page must create a CAPTCHA image under `tmp/captcha`, fill `id="captch"` from terminal input, and submit only when `--submit-form` is present.
 
 ## 7. Risks & Assumptions
 
@@ -142,10 +205,15 @@ This plan updates the existing form automation flow so the CLI can open the Petr
 - **RISK-002**: Petrolimex can reject automation or require additional user interaction; this plan does not bypass website protections.
 - **RISK-003**: Running with `manual_after_fill` requires an interactive terminal because the implementation waits for `input(...)`.
 - **RISK-004**: Processing multiple emails with manual captcha enabled will require one captcha interaction per email.
+- **RISK-005**: Petrolimex may render the CAPTCHA image through a selector that changes, requires reload, or is not directly screenshot-friendly; the implementation must fall back to visible browser entry.
+- **RISK-006**: CAPTCHA screenshots in `tmp/captcha` are short-lived operational artifacts and should be treated as sensitive local files.
+- **RISK-007**: The project cannot meet a strict zero-touch browser-submission requirement while Petrolimex requires a CAPTCHA and no official automation path is available.
 - **ASSUMPTION-001**: Email bodies continue to include a line shaped like `Mã tra cứu: <code>`.
 - **ASSUMPTION-002**: The `*` character in the sample lookup code is intentional and must be preserved.
 - **ASSUMPTION-003**: The selected email link points to `https://hoadon.petrolimex.com.vn` or the config can direct the automation to the fixed Petrolimex lookup URL in a later follow-up.
 - **ASSUMPTION-004**: It is acceptable for the first Petrolimex-specific flow to require visible Chromium instead of headless mode.
+- **ASSUMPTION-005**: The user is available to read and type the CAPTCHA value during each automation run.
+- **ASSUMPTION-006**: If full unattended operation is required, the project owner will obtain an authorized non-CAPTCHA integration path from Petrolimex or another official source.
 
 ## 8. Related Specifications / Further Reading
 
@@ -154,3 +222,7 @@ This plan updates the existing form automation flow so the CLI can open the Petr
 - [Form automation module](../src/form_automation.py)
 - [CLI entry point](../src/main.py)
 - [Petrolimex invoice lookup page](https://hoadon.petrolimex.com.vn/SearchInvoicebycode/Index)
+- [Playwright Python screenshots](https://playwright.dev/python/docs/screenshots)
+- [Playwright Python locator screenshot API](https://playwright.dev/python/docs/api/class-locator#locator-screenshot)
+- [Playwright Python input actions](https://playwright.dev/python/docs/input)
+- [Playwright Python page pause API](https://playwright.dev/python/docs/api/class-page#page-pause)
