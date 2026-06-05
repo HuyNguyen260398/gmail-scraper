@@ -1,0 +1,35 @@
+{
+  "url_allowlist": [
+    "hoadon.petrolimex.com.vn"
+  ],
+  "headless": false,
+  "manual_after_fill": true,
+  "timeout_ms": 30000,
+  "field_values": [
+    {
+      "key": "invoice_code",
+      "source": "petrolimex_invoice_code"
+    }
+  ],
+  "form_fields": [
+    {
+      "field_key": "invoice_code",
+      "selector_strategy": "id",
+      "selector_value": "strFkey",
+      "input_type": "text",
+      "required": true
+    },
+    {
+      "field_key": "captcha",
+      "selector_strategy": "id",
+      "selector_value": "captch",
+      "input_type": "text",
+      "required": true,
+      "requires_manual_input": true
+    }
+  ],
+  "submit_selector": {
+    "selector_strategy": "css",
+    "selector_value": "#SearchformByfkey input[type=\"submit\"]"
+  }
+}

@@ -1,6 +1,7 @@
 # Secrets — never commit these
 config/credentials.json
 config/token.json
+config/form_automation.json
 .env
 
 # Python
@@ -13,3 +14,9 @@ venv/
 
 # OS
 .DS_Store
+
+# Temp files
+*.log
+*.tmp
+*.bak
+tmp/
